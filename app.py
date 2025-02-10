@@ -1,24 +1,24 @@
 import streamlit as st
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from translate import Translator
 import torch
-from googletrans import Translator
 
 # Load Hugging Face model and tokenizer
-model_name = "bigscience/bloom-560m"  # Smaller version of BLOOM for free usage
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32)
+model_name = "distilgpt2"  # Smaller model for better performance
+model = AutoModelForCausalLM.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-# Initialize translator
-translator = Translator()
 
 # Chat history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+# Translate function
+translator = Translator(to_lang="en")
+
 def translate_text(text, src_lang, dest_lang):
-    """Translate text between languages."""
     try:
-        return translator.translate(text, src=src_lang, dest=dest_lang).text
+        translator = Translator(from_lang=src_lang, to_lang=dest_lang)
+        return translator.translate(text)
     except Exception as e:
         return f"Translation error: {e}"
 
@@ -27,7 +27,7 @@ def chat_with_llm(prompt, language):
     try:
         translated_prompt = translate_text(prompt, language, "en")
         inputs = tokenizer(translated_prompt, return_tensors="pt")
-        outputs = model.generate(**inputs, max_length=512)
+        outputs = model.generate(**inputs, max_length=100)
         response_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
         translated_response = translate_text(response_text, "en", language)
         return translated_response
@@ -39,7 +39,7 @@ st.title("Multilingual Chatbot with Translation")
 st.write("Chat with a multilingual model and translate responses instantly!")
 
 # Select language
-languages = {"English": "en", "Spanish": "es", "French": "fr", "German": "de", "Bengali": "bn", "Chinese": "zh-cn"}
+languages = {"English": "en", "Spanish": "es", "French": "fr", "German": "de", "Bengali": "bn", "Chinese": "zh"}
 language = st.selectbox("Choose your language", list(languages.keys()))
 language_code = languages[language]
 
