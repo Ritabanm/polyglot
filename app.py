@@ -13,8 +13,6 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 # Translate function
-translator = Translator(to_lang="en")
-
 def translate_text(text, src_lang, dest_lang):
     try:
         translator = Translator(from_lang=src_lang, to_lang=dest_lang)
@@ -55,6 +53,6 @@ if st.button("Send"):
     if user_input.strip():
         bot_response = chat_with_llm(user_input, language_code)
         st.session_state.chat_history.append({"user": user_input, "bot": bot_response})
-        st.experimental_rerun()  # Refresh the conversation
+        st.experimental_set_query_params()  # Refresh conversation with query parameters
     else:
         st.warning("Please enter a message.")
